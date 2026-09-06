@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-16 px-6">
+    <main className="flex min-h-[calc(100vh-73px)] flex-col items-center justify-center gap-16 px-6">
       <div className="flex flex-col items-center text-center">
         <h1 className="text-6xl font-bold tracking-tight text-neutral-900">
           Findora
@@ -27,6 +27,23 @@ export default function Home() {
           Report a Sighting
         </Link>
       </div>
+
+      <p className="text-sm text-neutral-500">
+        Already using Findora?{" "}
+        <Link
+          href="/login"
+          className="font-medium text-neutral-900 hover:underline"
+        >
+          Log in
+        </Link>
+        {" or "}
+        <Link
+          href="/signup"
+          className="font-medium text-neutral-900 hover:underline"
+        >
+          sign up
+        </Link>
+      </p>
     </main>
   );
 }

@@ -1,10 +1,11 @@
 /**
  * Auth helpers for Findora.
  *
- * Planned flow (docs/PRD.md §2.3):
- * - Sign up: email or phone + one-time OTP verification, then set a password.
- * - All subsequent logins: email/phone + password (no repeated OTP).
+ * Session utilities — check login state and get the current user.
+ * See session.ts for getUser(), isAuthenticated(), getUserId().
  *
- * To be implemented in an upcoming step.
+ * Signup flow (docs/PRD.md §2.3):
+ * - Sign up: email + one-time OTP verification (mocked for demo), then set a password.
+ * - All subsequent logins: email + password (no repeated OTP).
  */
-export {};
+export { getUser, isAuthenticated, getUserId } from "./session";
