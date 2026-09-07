@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/db/supabase";
+import { generateClientEmbeddingFromFile } from "@/lib/ai-matching/embeddings";
 
 export default function ReportCasePage() {
   const router = useRouter();
@@ -23,6 +24,11 @@ export default function ReportCasePage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [contactShareEnabled, setContactShareEnabled] = useState(false);
 
+  // Face embedding state
+  const [embedding, setEmbedding] = useState<number[] | null>(null);
+  const [analyzingFace, setAnalyzingFace] = useState(false);
+  const [faceWarning, setFaceWarning] = useState<string | null>(null);
+
   // Submission state
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -40,13 +46,22 @@ export default function ReportCasePage() {
     });
   }, [router]);
 
-  // Handle photo selection and preview
-  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  // Handle photo selection, preview, and face embedding generation
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
     setPhotoFile(file);
+    setEmbedding(null);
+    setFaceWarning(null);
     if (file) {
       const url = URL.createObjectURL(file);
       setPhotoPreview(url);
+
+      // Generate face embedding in the browser
+      setAnalyzingFace(true);
+      const result = await generateClientEmbeddingFromFile(file);
+      setEmbedding(result.embedding);
+      setFaceWarning(result.warning);
+      setAnalyzingFace(false);
     } else {
       setPhotoPreview(null);
     }
@@ -102,6 +117,7 @@ export default function ReportCasePage() {
         last_seen_date: lastSeenDate,
         photo_url: photoUrl,
         contact_share_enabled: contactShareEnabled,
+        embedding: embedding,
       });
 
       if (insertError) {
@@ -310,12 +326,35 @@ export default function ReportCasePage() {
                 onClick={() => {
                   setPhotoFile(null);
                   setPhotoPreview(null);
+                  setEmbedding(null);
+                  setFaceWarning(null);
                   if (fileInputRef.current) fileInputRef.current.value = "";
                 }}
                 className="mt-2 text-xs text-neutral-500 hover:text-neutral-700"
               >
                 Remove photo
               </button>
+            </div>
+          )}
+
+          {/* Face analysis status */}
+          {analyzingFace && (
+            <div className="mt-3 flex items-center gap-2 text-sm text-blue-600">
+              <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Analyzing face features...
+            </div>
+          )}
+          {faceWarning && !analyzingFace && (
+            <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+              {faceWarning}
+            </div>
+          )}
+          {embedding && !analyzingFace && (
+            <div className="mt-3 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">
+              Face features extracted ({embedding.length} dimensions) — ready for matching.
             </div>
           )}
 
